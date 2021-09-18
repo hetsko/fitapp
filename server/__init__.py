@@ -1,1 +1,1 @@
-from app import FitApp
+from .app import get_fitapp
