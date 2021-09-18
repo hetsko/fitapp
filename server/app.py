@@ -3,6 +3,8 @@ import functools
 import threading
 import itertools
 import webbrowser
+import os
+import contextlib
 
 from flask import Flask, jsonify, request, redirect
 from wsgiref.simple_server import make_server
@@ -15,7 +17,7 @@ fitapps_ports = {}
 
 
 class FitApp:
-    def __init__(self, port=5050, open_browser=True):
+    def __init__(self, port=5050, open_browser=True, http_log=False):
         self._ids = []
         self._get_data = lambda _: {'x': []}
         self._get_metadata = lambda _: 'n/a'
@@ -26,13 +28,21 @@ class FitApp:
         except OSError:
             raise RuntimeError(f'Port {port} already in use, try another one or 0')
 
-        logger.info(f'App is running on {self.address}')
+        if http_log:
+            run = self._server.serve_forever
+        else:
+            def run():
+                with open(os.devnull, 'w') as null:
+                    with contextlib.redirect_stderr(null):
+                        self._server.serve_forever()
         self._server_thread = threading.Thread(
-            target=self._server.serve_forever,
+            target=run,
             name=f'FitApp-server-{next(unique_id)}',
             daemon=True,
         )
         self._server_thread.start()
+
+        logger.info(f'App is running on {self.address}')
         if open_browser:
             self.open_browser()
 
@@ -69,12 +79,12 @@ class FitApp:
         self._get_metadata = get_metadata
 
 
-def get_fitapp(port:int=5050, open_browser:bool=True) -> FitApp:
+def get_fitapp(port:int=5050, open_browser:bool=True, http_log:bool=False) -> FitApp:
     """Create a new FitApp listening at given port. Any subsequent calls to this
     function with the same `port` parameter return the original app instance.
     """
     if port not in fitapps_ports:
-        fitapps_ports[port] = FitApp(port=port, open_browser=open_browser)
+        fitapps_ports[port] = FitApp(port, open_browser, http_log)
     return fitapps_ports[port]
 
 
