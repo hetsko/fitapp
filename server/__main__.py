@@ -7,7 +7,7 @@ fit = get_fitapp()
 
 # Setup testing data
 fit.set_ids(['1', '2', '3'])
-fit.callback_data(lambda i: {'x': list(range(int(i) + 4)), 'y': 1})
+fit.callback_data(lambda i: {'x': list(range(int(i) + 4)), 'y': (int(i) + 4)*[1]})
 
 try:
     # fit._wait_forever()

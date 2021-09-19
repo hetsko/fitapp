@@ -19,7 +19,7 @@
         ? data.x.reduce(
               (path, x, i) =>
                   path + ` ${$toClientX(x)},${$toClientY(data.y[i])}`,
-              `M ${data.x[0]},${data.y[0]} L`
+              `M ${$toClientX(data.x[0])},${$toClientY(data.y[0])} L`
           )
         : data.x.reduce(
               (path, x) => path + `M ${$toClientX(x)},0 v -${$clientHeight}`,
