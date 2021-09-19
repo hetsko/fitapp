@@ -5,7 +5,7 @@ export const ids = readable([], set => {
     fetchIds().then(a => set(a));
 });
 
-export const idSelected = writable("1");
+export const idSelected = writable(null);
 
 //
 // Data
@@ -22,13 +22,12 @@ export const metadata = derived(
 export const data = derived(
     idSelected,
     ($id, set) => {
-        fetchData($id).then(data => set(data));
+        if ($id) fetchData($id).then(data => set(data));
     },
     { x: [] }
 );
 
 export const dataSorted = derived(data, $data => {
-    console.log($data);
     const keys = Object.keys($data);
     if (keys.every(k => ["x"].includes(k))) {
         return { x: [...$data.x].sort((a, b) => a.x - b.x) };

@@ -17,7 +17,8 @@ export async function fetchIds() {
     const response = await fetch("/ids");
     if (await checkAndHandleError(response, "fetchIds()")) return [];
 
-    return await response.json().ids;
+    const { ids } = await response.json();
+    return ids;
 }
 
 export async function fetchMetadata(id) {
@@ -41,11 +42,15 @@ export async function fetchData(id) {
     if (await checkAndHandleError(response, "fetchData()")) return { x: [] };
 
     const { data } = await response.json();
-    if (data.y?.length !== data.x.length) {
-        console.error(`Data id='${id}' has mismatched dimensions (x, y)`);
+    if (data.y && data.y.length !== data.x.length) {
+        console.error(
+            `Data id='${id}' has mismatched dimensions (x[${data.x.length}], y[${data.y.length}])`
+        );
     }
-    if (data.yerr?.length !== data.x.length) {
-        console.error(`Data id='${id}' has mismatched dimensions (x, yerr)`);
+    if (data.yerr && data.yerr.length !== data.x.length) {
+        console.error(
+            `Data id='${id}' has mismatched dimensions (x[${data.x.length}], yerr[${data.yerr.length}])`
+        );
     }
     return data;
 }

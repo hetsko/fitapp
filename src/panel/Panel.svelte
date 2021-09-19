@@ -1,5 +1,7 @@
 <script>
     import { createEventDispatcher } from "svelte";
+    import IdSelector from "./IdSelector.svelte";
+
     import { formatNumber } from "../graph/ticks";
     import { xLim, yLim, gridParams } from "../storeConfiguration";
 
@@ -27,6 +29,7 @@
 <aside>
     <h1>&quot;A nice day to fit.&quot;</h1>
     <div class="container">
+        <IdSelector />
         <!-- <input type="range" min="1" max="10" bind:value={graphWidth} /> -->
         <!-- <input type="number" on:submit="{(e) => graph.setXLim(value)}" /> -->
         <div>

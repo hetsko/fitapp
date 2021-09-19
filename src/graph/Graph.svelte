@@ -21,6 +21,6 @@
         font-weight: 100;
     }
     .root {
-        height: 100%;
+        height: 50%;
     }
 </style>
