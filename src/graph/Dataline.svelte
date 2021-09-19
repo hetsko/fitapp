@@ -1,5 +1,5 @@
 <script>
-    import { toClientX, toClientY } from "../store";
+    import { toClientX, toClientY } from "./storeTransforms";
 
     export let data;
     export let selected;

@@ -1,6 +1,6 @@
 <script>
     import { beforeUpdate } from "svelte";
-    import { toClientX } from "../store";
+    import { toClientX } from "./storeTransforms";
 
     export let base;
     export let baseFormatted = null;

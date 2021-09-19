@@ -1,8 +1,6 @@
 import { writable, derived, readable } from "svelte/store";
-import { absolute, relative } from "./graph/transforms";
 
-export const clientWidth = writable(1);
-export const clientHeight = writable(1);
+import { fetchIds, fetchMetadata, fetchData } from "./fetchData";
 
 //
 // Data
@@ -13,6 +11,8 @@ export const data = readable({ x: [], y: [] }, set => {
     //     x: [34, 10, 20, 30, 40, 50],
     //     y: [0, 12, 33, 35, 45, 32],
     // });
+    fetchIds();
+    fetchMetadata("1");
 
     const dataY = [
         3606, 3606, 3606, 3883, 3883, 4376, 4556, 4556, 4902, 5080, 5080, 5512,
@@ -42,46 +42,3 @@ export const dataSorted = derived(data, $data => {
 
 export const selected = writable(new Set());
 // export const selected = derived(data, $data => $data.x.map(() => false));
-
-//
-// Params
-//
-
-export const xLim = writable([0, 1]);
-export const yLim = writable([0, 1]);
-
-export const gridParams = writable({
-    minor: true,
-    major: true,
-    axes: true,
-});
-
-//
-// Derived: Transform calculations
-//
-
-export const toClientX = derived([clientWidth, xLim], args =>
-    absolute.toClientX(...args)
-);
-export const toClientY = derived([clientHeight, yLim], args =>
-    absolute.toClientY(...args)
-);
-export const toPlotX = derived([clientWidth, xLim], args =>
-    absolute.toPlotX(...args)
-);
-export const toPlotY = derived([clientHeight, yLim], args =>
-    absolute.toPlotY(...args)
-);
-
-export const toClientScaleX = derived([clientWidth, xLim], args =>
-    relative.toClientX(...args)
-);
-export const toClientScaleY = derived([clientHeight, yLim], args =>
-    relative.toClientY(...args)
-);
-export const toPlotScaleX = derived([clientWidth, xLim], args =>
-    relative.toPlotX(...args)
-);
-export const toPlotScaleY = derived([clientHeight, yLim], args =>
-    relative.toPlotY(...args)
-);

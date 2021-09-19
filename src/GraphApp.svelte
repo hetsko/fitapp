@@ -1,19 +1,17 @@
 <script>
     import Graph from "./graph/Graph.svelte";
     import SelectionRect from "./SelectionRect.svelte";
-    import Panel from "./Panel.svelte";
+    import Panel from "./panel/Panel.svelte";
     import {
         clientWidth,
         clientHeight,
-        dataSorted,
-        selected,
-        xLim,
-        yLim,
         toPlotX,
         toPlotY,
         toPlotScaleX,
         toPlotScaleY,
-    } from "./store";
+    } from "./graph/storeTransforms";
+    import { dataSorted, selected } from "./storeData";
+    import { xLim, yLim } from "./storeConfiguration";
     import { formatNumber } from "./graph/ticks";
 
     function setDefaultLims(data) {

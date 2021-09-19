@@ -1,7 +1,8 @@
 <script>
     import Grid from "./Grid.svelte";
     import Dataline from "./Dataline.svelte";
-    import { clientWidth, clientHeight, dataSorted, selected } from "../store";
+    import { dataSorted, selected } from "../storeData";
+    import { clientWidth, clientHeight } from "./storeTransforms";
 </script>
 
 <div class="root" on:mousedown on:mousewheel>

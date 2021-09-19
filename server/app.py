@@ -113,7 +113,7 @@ def create_flask(fitapp):
     def ids():
         return jsonify(ids=fitapp._ids)
 
-    @app.route('/metadata')
+    @app.route('/metadata', methods=['POST'])
     @json_required(['id'])
     def metadata(json):
         if json['id'] not in fitapp._ids:
@@ -130,7 +130,7 @@ def create_flask(fitapp):
         else:
             return jsonify(ok=True, metadata=metadata), 200
 
-    @app.route('/data')
+    @app.route('/data', methods=['POST'])
     @json_required(['id'])
     def data(json):
         if json['id'] not in fitapp._ids:

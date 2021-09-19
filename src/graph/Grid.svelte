@@ -11,7 +11,8 @@
         getTicksBase,
         formatNumberToDelta,
     } from "./ticks";
-    import { xLim, yLim, toClientX, toClientY, gridParams } from "../store";
+    import { xLim, yLim, gridParams } from "../storeConfiguration";
+    import { toClientX, toClientY } from "./storeTransforms";
 
     $: xTicksMajor = getTicks(...$xLim);
     $: yTicksMajor = getTicks(...$yLim);

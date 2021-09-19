@@ -1,7 +1,7 @@
 <script>
     import { createEventDispatcher } from "svelte";
-    import { formatNumber } from "./graph/ticks";
-    import { xLim, yLim, gridParams } from "./store";
+    import { formatNumber } from "../graph/ticks";
+    import { xLim, yLim, gridParams } from "../storeConfiguration";
 
     let dispatch = createEventDispatcher();
 

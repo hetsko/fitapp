@@ -1,6 +1,6 @@
 <script>
     import { formatNumber } from "./ticks";
-    import { toClientX, toClientY, clientWidth } from "../store";
+    import { toClientX, toClientY, clientWidth } from "./storeTransforms";
 
     export let y;
     export let base = 0;
