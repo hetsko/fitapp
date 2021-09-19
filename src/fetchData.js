@@ -28,7 +28,8 @@ export async function fetchMetadata(id) {
     });
     if (await checkAndHandleError(response, "fetchMetadata()")) return "[n/a]";
 
-    return await response.json().metadata;
+    const { metadata } = await response.json();
+    return metadata;
 }
 
 export async function fetchData(id) {
@@ -39,5 +40,12 @@ export async function fetchData(id) {
     });
     if (await checkAndHandleError(response, "fetchData()")) return { x: [] };
 
-    return await response.json().data;
+    const { data } = await response.json();
+    if (data.y?.length !== data.x.length) {
+        console.error(`Data id='${id}' has mismatched dimensions (x, y)`);
+    }
+    if (data.yerr?.length !== data.x.length) {
+        console.error(`Data id='${id}' has mismatched dimensions (x, yerr)`);
+    }
+    return data;
 }

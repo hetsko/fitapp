@@ -19,9 +19,14 @@
             const xMin = Math.min(...data.x);
             const dx = Math.max(...data.x) - xMin;
             $xLim = [xMin - 0.1 * dx, xMin + 1.1 * dx];
+
             const yMin = Math.min(...data.y);
             const dy = Math.max(...data.y) - yMin;
-            $yLim = [yMin - 0.1 * dy, yMin + 1.1 * dy];
+            if (data.hasOwnProperty("y") && dy > 0) {
+                $yLim = [yMin - 0.1 * dy, yMin + 1.1 * dy];
+            } else {
+                $yLim = [-10, 10];
+            }
         } else {
             $xLim = [-10, 10];
             $yLim = [-10, 10];

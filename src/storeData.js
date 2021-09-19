@@ -1,43 +1,55 @@
 import { writable, derived, readable } from "svelte/store";
-
 import { fetchIds, fetchMetadata, fetchData } from "./fetchData";
+
+export const ids = readable([], set => {
+    fetchIds().then(a => set(a));
+});
+
+export const idSelected = writable("1");
 
 //
 // Data
 //
 
-export const data = readable({ x: [], y: [] }, set => {
-    // set({
-    //     x: [34, 10, 20, 30, 40, 50],
-    //     y: [0, 12, 33, 35, 45, 32],
-    // });
-    fetchIds();
-    fetchMetadata("1");
+export const metadata = derived(
+    idSelected,
+    ($id, set) => {
+        fetchMetadata($id).then(a => set(a));
+    },
+    "..."
+);
 
-    const dataY = [
-        3606, 3606, 3606, 3883, 3883, 4376, 4556, 4556, 4902, 5080, 5080, 5512,
-        6118, 6118, 6322, 6322, 6786, 7141, 7141, 7428, 7945, 8321, 9102, 9322,
-        9322, 9668, 9668, 9668, 9668, 10010, 10276, 10623, 10623, 10623, 10623,
-        10623, 10851, 11007, 11007, 11007, 11007, 11007, 11127, 11193, 11443,
-        11468, 11468, 11468, 11468, 11468, 11468, 11468, 11468, 11468, 11468,
-        11468, 11468, 11841, 11841, 11841, 11841, 11841, 11841, 11841, 12200,
-        12501, 12501, 12501, 12944, 13180, 13180, 13180, 13180, 13180, 13180,
-        13180, 13180, 13180, 13180, 13581, 13800, 13800, 13800, 13800, 13911,
-        14409, 14409, 14409, 14409, 14409, 14409, 14395, 14562, 14562, 14562,
-        14562, 14562, 14562, 14562, 14984, 14984, 14984, 14984, 14984, 14984,
-        14984, 14984, 15548, 15940, 15940, 16206, 16363, 16363, 16363, 16721,
-        16721, 17150, 17684, 17684, 17984, 18530, 18956, 18956, 18956, 18956,
-    ];
-    set({
-        x: dataY.map((_y, i) => i),
-        y: dataY,
-    });
-});
+export const data = derived(
+    idSelected,
+    ($id, set) => {
+        fetchData($id).then(data => set(data));
+    },
+    { x: [] }
+);
+
 export const dataSorted = derived(data, $data => {
-    const sorted = $data.x
-        .map((x, i) => ({ x, y: $data.y[i] }))
-        .sort((a, b) => a.x - b.x);
-    return { x: sorted.map(a => a.x), y: sorted.map(b => b.y) };
+    console.log($data);
+    const keys = Object.keys($data);
+    if (keys.every(k => ["x"].includes(k))) {
+        return { x: [...$data.x].sort((a, b) => a.x - b.x) };
+    } else if (keys.every(k => ["x", "y"].includes(k))) {
+        const sorted = $data.x
+            .map((x, i) => ({ x, y: $data.y[i] }))
+            .sort((a, b) => a.x - b.x);
+        return { x: sorted.map(a => a.x), y: sorted.map(b => b.y) };
+    } else if (keys.every(k => ["x", "y", "yerr"].includes(k))) {
+        const sorted = $data.x
+            .map((x, i) => ({ x, y: $data.y[i], yerr: $data.yerr[i] }))
+            .sort((a, b) => a.x - b.x);
+        return {
+            x: sorted.map(a => a.x),
+            y: sorted.map(b => b.y),
+            yerr: sorted.map(b => b.yerr),
+        };
+    } else {
+        console.error(`Data format {${keys}} not implemented`);
+        return { x: [] };
+    }
 });
 
 export const selected = writable(new Set());
