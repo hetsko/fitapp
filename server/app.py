@@ -113,11 +113,14 @@ class FitApp:
             try:
                 metadata = self._get_metadata(json['id'])
             except Exception as e:
+                _logger.error(f'/metadata: {type(e).__name__}: {str(e)}')
                 return jsonify(ok=False, error='exception',
                                exception=f'{type(e).__name__}: {str(e)}'), 500
 
             if not isinstance(metadata, str):
-                return jsonify(ok=False, error=f'get_metadata(): must return str'), 500
+                error = 'Callback get_metadata() must return str'
+                _logger.error(error)
+                return jsonify(ok=False, error=error), 500
             else:
                 return jsonify(ok=True, metadata=metadata), 200
 
@@ -130,11 +133,14 @@ class FitApp:
             try:
                 data = self._get_data(json['id'])
             except Exception as e:
+                _logger.error(f'/data: {type(e).__name__}: {str(e)}')
                 return jsonify(ok=False, error='exception',
                                exception=f'{type(e).__name__}: {str(e)}'), 500
             if not isinstance(data, Data):
-                return jsonify(ok=False, error=f'get_data(): must return instance of Data'), 500
-            return jsonify(ok=True, data=data), 200
+                error = 'Callback get_data() must return instance of Data'
+                _logger.error(error)
+                return jsonify(ok=False, error=error), 500
+            return jsonify(ok=True, data=data.todict()), 200
 
         @app.route('/fitdata', methods=['POST'])
         @json_required(['id', 'fitArgs', 'start', 'stop', 'num'])
@@ -146,9 +152,10 @@ class FitApp:
                 x = numpy.linspace(json['start'], json['stop'], json['num'])
                 data = Data(x=x, y=self._fitfunc(x, *json['fitArgs']))
             except Exception as e:
+                _logger.error(f'/fitdata: {type(e).__name__}: {str(e)}')
                 return jsonify(ok=False, error='exception',
                                exception=f'{type(e).__name__}: {str(e)}'), 500
-            return jsonify(ok=True, data=data), 200
+            return jsonify(ok=True, data=data.todict()), 200
 
         @app.route('/calculate/fit', methods=['POST'])
         @json_required(['id'])
@@ -160,6 +167,7 @@ class FitApp:
                 data = self._get_data(json['id'])
                 results = self._fit_data(data)
             except Exception as e:
+                _logger.error(f'/calculate/fit: {type(e).__name__}: {str(e)}')
                 return jsonify(ok=False, error='exception',
                                exception=f'{type(e).__name__}: {str(e)}'), 500
             return jsonify(ok=True, **results), 200
