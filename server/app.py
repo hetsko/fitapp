@@ -64,12 +64,10 @@ class FitApp:
     def __init__(self, port=5050, open_browser=True, http_log=False, cache=16):
         self._labels = []
         self._fitfunc = None
+        self._fitfunc_params = []
         self._get_metadata = lambda _: 'n/a'
         self._get_data = lambda _: Data(x=[])
-        self._get_guess = lambda _: (
-            (len(inspect.signature(self._fitfunc).parameters) - 1) * [1]
-            if self._fitfunc else []
-        )
+        self._get_guess = lambda _: len(self._fitfunc_params) * [1]
 
         self._lru_cache = cache
 
@@ -153,12 +151,12 @@ class FitApp:
             if json['id'] not in self.labels:
                 return jsonify(ok=False, error=f'Id \'{json["id"]}\' not found'), 404
             if self._fitfunc is None:
-                return jsonify(ok=False, error='No fit model was not specified'), 404
+                return jsonify(ok=False, error='No fit model was not specified'), 400
 
             try:
                 metadata = {
                     'args': self._get_guess(json['id']),
-                    'params': list(inspect.signature(self._fitfunc).parameters)[1:],
+                    'params': self._fitfunc_params,
                 }
             except Exception as e:
                 _logger.error(f'/fit/meta: {type(e).__name__}: {str(e)}')
@@ -170,7 +168,12 @@ class FitApp:
         @json_required(['fitArgs', 'start', 'stop', 'num'])
         def fit_data(json):
             if self._fitfunc is None:
-                return jsonify(ok=False, error='No fit model was not specified'), 404
+                return jsonify(ok=False, error='No fit model was not specified'), 400
+            if len(json['fitArgs']) != len(self._fitfunc_params):
+                return jsonify(
+                    ok=False,
+                    error=f'Invalid length of fitArgs ({len(json["fitArgs"])})',
+                ), 400
 
             try:
                 x = numpy.linspace(json['start'], json['stop'], json['num'])
@@ -182,21 +185,27 @@ class FitApp:
             return jsonify(ok=True, data=data.todict()), 200
 
         @app.route('/fit/calculate', methods=['POST'])
-        @json_required(['id'])
+        @json_required(['id', 'fitArgs'])
         def fit_calculate(json):
             if json['id'] not in self.labels:
                 return jsonify(ok=False, error=f'Id \'{json["id"]}\' not found'), 404
             if self._fitfunc is None:
-                return jsonify(ok=False, error='No fit model was not specified'), 404
+                return jsonify(ok=False, error='No fit model was not specified'), 400
+            if json['fitArgs'] and len(json['fitArgs']) != len(self._fitfunc_params):
+                return jsonify(
+                    ok=False,
+                    error=f'Invalid length of fitArgs ({len(json["fitArgs"])})',
+                ), 400
 
             try:
                 data = self._get_data(json['id'])
-                results = self._fit_data(self._fitfunc, data)
+                results = self._fit_data(
+                    self._fitfunc, data, guess=json['fitArgs']))
             except Exception as e:
                 _logger.error(f'/fit/calculate: {type(e).__name__}: {str(e)}')
-                return jsonify(ok=False, error='exception',
-                               exception=f'{type(e).__name__}: {str(e)}'), 500
-            return jsonify(ok=True, **results), 200
+                return jsonify(ok = False, error = 'exception',
+                               exception = f'{type(e).__name__}: {str(e)}'), 500
+            return jsonify(ok = True, **results), 200
 
         return app
 
@@ -210,15 +219,15 @@ class FitApp:
         self._server_thread.join()
 
     @ staticmethod
-    def _fit_data(f, data, guess=None):
+    def _fit_data(f, data, guess = None):
         if data.y is None:
             raise RuntimeError('Cannot fit data without y coordinates')
-        opt, std = curve_fit(
+        opt, std=curve_fit(
             f,
             numpy.asarray(data.x),
             numpy.asarray(data.y),
-            sigma=None if data.yerr is None else numpy.asarray(data.yerr),
-            p0=guess
+            sigma = None if data.yerr is None else numpy.asarray(data.yerr),
+            p0 = guess
         )
         return {
             'fitArgs': opt.tolist(),
@@ -256,6 +265,7 @@ class FitApp:
         argument of scipy.optimize.curve_fit
         """
         self._fitfunc = func
+        self._fitfunc_params = list(inspect.signature(func).parameters)[1:]
 
     def callback_metadata(self, get_metadata):
         """Set callback for additional information about data with signature:
