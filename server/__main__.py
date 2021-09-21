@@ -1,13 +1,13 @@
+from app import get_fitapp
 import logging
 logging.basicConfig(level=logging.INFO, format='%(message)s')
-
-from app import get_fitapp
 
 fit = get_fitapp()
 
 # Setup testing data
-fit.set_ids(['1', '2', '3'])
-fit.callback_data(lambda i: {'x': list(range(int(i) + 4)), 'y': (int(i) + 4)*[1]})
+fit.labels = ['1', '2', '3']
+fit.callback_data(lambda i: {'x': list(
+    range(int(i) + 4)), 'y': (int(i) + 4)*[1]})
 
 try:
     # fit._wait_forever()
