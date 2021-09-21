@@ -1,13 +1,18 @@
 import { writable, derived, readable } from "svelte/store";
-import { fetchIds, fetchMetadata, fetchData } from "./requests";
+import {
+    fetchIds,
+    fetchMetadata,
+    fetchData,
+    fetchFitMetadata,
+} from "./requests";
 
 export const ids = readable([], set => {
-    fetchIds().then(a => set(a));
+    fetchIds().then(a => {
+        set(a);
+        idSelected.set(a[0] ?? null);
+    });
 });
-
 export const idSelected = writable(null);
-
-export const fitGuess = readable([1, 2, 3]);
 
 //
 // Data
@@ -31,3 +36,21 @@ export const data = derived(
 
 export const selected = writable(new Set());
 // export const selected = derived(data, $data => $data.x.map(() => false));
+
+//
+// Fit
+//
+
+export const fitMetadata = derived(
+    idSelected,
+    ($id, set) => {
+        if ($id)
+            fetchFitMetadata($id).then(data => {
+                set(data);
+                fitGuess.set(data.args);
+            });
+    },
+    { args: [], params: [] }
+);
+
+export const fitGuess = writable(null);

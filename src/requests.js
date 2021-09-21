@@ -2,7 +2,9 @@ async function checkAndHandleError(response, label) {
     if (!response.ok) {
         try {
             const data = await response.json();
-            console.error(`${label} error: ${data.error}`);
+            console.error(
+                `${label} error: ${data.error} ${data.exception ?? ""}`
+            );
         } catch (error) {
             console.error(
                 `${label} error ${response.status} (no json in response)`
@@ -46,7 +48,7 @@ export async function fetchIds() {
 }
 
 export async function fetchMetadata(id) {
-    const response = await fetch("/metadata", {
+    const response = await fetch("/data/meta", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ id }),
@@ -79,13 +81,26 @@ export async function fetchData(id) {
     return sortData(data);
 }
 
-export async function fetchFitdata(fitArgs, start, stop, num) {
-    const response = await fetch("/fitdata", {
+export async function fetchFitMetadata(id) {
+    const response = await fetch("/fit/meta", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id }),
+    });
+    if (await checkAndHandleError(response, "fetchFitMetadata()"))
+        return "[n/a]";
+
+    const { metadata } = await response.json();
+    return metadata;
+}
+
+export async function fetchFitData(fitArgs, start, stop, num) {
+    const response = await fetch("/fit/data", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ fitArgs, start, stop, num }),
     });
-    if (await checkAndHandleError(response, "fetchFitdata()"))
+    if (await checkAndHandleError(response, "fetchFitData()"))
         return { x: [], y: [] };
 
     const { data } = await response.json();

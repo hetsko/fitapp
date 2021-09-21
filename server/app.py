@@ -4,6 +4,7 @@ import webbrowser
 import os
 import contextlib
 import threading
+import inspect
 
 from wsgiref.simple_server import make_server
 from flask import Flask, jsonify, request, redirect
@@ -65,6 +66,10 @@ class FitApp:
         self._fitfunc = None
         self._get_metadata = lambda _: 'n/a'
         self._get_data = lambda _: Data(x=[])
+        self._get_guess = lambda _: (
+            (len(inspect.signature(self._fitfunc).parameters) - 1) * [1]
+            if self._fitfunc else []
+        )
 
         self._lru_cache = cache
 
@@ -104,7 +109,7 @@ class FitApp:
         def ids():
             return jsonify(ids=self.labels)
 
-        @app.route('/metadata', methods=['POST'])
+        @app.route('/data/meta', methods=['POST'])
         @json_required(['id'])
         def metadata(json):
             if json['id'] not in self.labels:
@@ -113,7 +118,7 @@ class FitApp:
             try:
                 metadata = self._get_metadata(json['id'])
             except Exception as e:
-                _logger.error(f'/metadata: {type(e).__name__}: {str(e)}')
+                _logger.error(f'/data/meta: {type(e).__name__}: {str(e)}')
                 return jsonify(ok=False, error='exception',
                                exception=f'{type(e).__name__}: {str(e)}'), 500
 
@@ -142,27 +147,45 @@ class FitApp:
                 return jsonify(ok=False, error=error), 500
             return jsonify(ok=True, data=data.todict()), 200
 
-        @app.route('/fitdata', methods=['POST'])
-        @json_required(['fitArgs', 'start', 'stop', 'num'])
-        def fitdata(json):
+        @app.route('/fit/meta', methods=['POST'])
+        @json_required(['id'])
+        def fit_metadata(json):
+            if json['id'] not in self.labels:
+                return jsonify(ok=False, error=f'Id \'{json["id"]}\' not found'), 404
             if self._fitfunc is None:
-                return jsonify(ok=True, data=Data(x=[], y=[]).todict()), 200
+                return jsonify(ok=False, error='No fit model was not specified'), 404
+
+            try:
+                metadata = {
+                    'args': self._get_guess(json['id']),
+                    'params': list(inspect.signature(self._fitfunc).parameters)[1:],
+                }
+            except Exception as e:
+                _logger.error(f'/fit/meta: {type(e).__name__}: {str(e)}')
+                return jsonify(ok=False, error='exception',
+                               exception=f'{type(e).__name__}: {str(e)}'), 500
+            return jsonify(ok=True, metadata=metadata), 200
+
+        @app.route('/fit/data', methods=['POST'])
+        @json_required(['fitArgs', 'start', 'stop', 'num'])
+        def fit_data(json):
+            if self._fitfunc is None:
+                return jsonify(ok=False, error='No fit model was not specified'), 404
 
             try:
                 x = numpy.linspace(json['start'], json['stop'], json['num'])
                 data = Data(x=x, y=self._fitfunc(x, *json['fitArgs']))
             except Exception as e:
-                _logger.error(f'/fitdata: {type(e).__name__}: {str(e)}')
+                _logger.error(f'/fit/data: {type(e).__name__}: {str(e)}')
                 return jsonify(ok=False, error='exception',
                                exception=f'{type(e).__name__}: {str(e)}'), 500
             return jsonify(ok=True, data=data.todict()), 200
 
-        @app.route('/calculate/fit', methods=['POST'])
+        @app.route('/fit/calculate', methods=['POST'])
         @json_required(['id'])
-        def calculate_fit(json):
+        def fit_calculate(json):
             if json['id'] not in self.labels:
                 return jsonify(ok=False, error=f'Id \'{json["id"]}\' not found'), 404
-
             if self._fitfunc is None:
                 return jsonify(ok=False, error='No fit model was not specified'), 404
 
@@ -170,7 +193,7 @@ class FitApp:
                 data = self._get_data(json['id'])
                 results = self._fit_data(self._fitfunc, data)
             except Exception as e:
-                _logger.error(f'/calculate/fit: {type(e).__name__}: {str(e)}')
+                _logger.error(f'/fit/calculate: {type(e).__name__}: {str(e)}')
                 return jsonify(ok=False, error='exception',
                                exception=f'{type(e).__name__}: {str(e)}'), 500
             return jsonify(ok=True, **results), 200

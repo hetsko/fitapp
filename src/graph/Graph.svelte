@@ -3,7 +3,7 @@
     import Dataline from "./Dataline.svelte";
     import { data, selected, fitGuess } from "../storeData";
     import { clientWidth, clientHeight } from "./storeTransforms";
-    import { fetchFitdata } from "../requests";
+    import { fetchFitData } from "../requests";
 
     const num = 500;
     $: start = $data.x.at($selected.size ? Math.min(...$selected) : 0);
@@ -17,10 +17,16 @@
     >
         <Grid />
         {#if $data.x.length > 0}
-            <Dataline data={$data} selected={$selected} />
-            {#await fetchFitdata($fitGuess, start, stop, num) then fitdata}
-                <Dataline data={fitdata} noMarker params={{ color: "green" }} />
-            {/await}
+            <Dataline data={$data} selected={$selected} noLine />
+            {#if $fitGuess}
+                {#await fetchFitData($fitGuess, start, stop, num) then fitdata}
+                    <Dataline
+                        data={fitdata}
+                        noMarker
+                        params={{ color: "green" }}
+                    />
+                {/await}
+            {/if}
         {/if}
     </svg>
 </div>
