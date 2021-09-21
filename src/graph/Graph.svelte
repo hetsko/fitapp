@@ -1,11 +1,11 @@
 <script>
     import Grid from "./Grid.svelte";
     import Dataline from "./Dataline.svelte";
-    import { data, selected, fitGuess } from "../storeData";
+    import { data, selected, fitGuess, fitResults } from "../storeData";
     import { clientWidth, clientHeight } from "./storeTransforms";
     import { fetchFitData } from "../requests";
 
-    const num = 500;
+    const num = 100;
     $: start = $data.x.at($selected.size ? Math.min(...$selected) : 0);
     $: stop = $data.x.at($selected.size ? Math.max(...$selected) : -1);
 </script>
@@ -20,6 +20,15 @@
             <Dataline data={$data} selected={$selected} noLine />
             {#if $fitGuess}
                 {#await fetchFitData($fitGuess, start, stop, num) then fitdata}
+                    <Dataline
+                        data={fitdata}
+                        noMarker
+                        params={{ color: "gray" }}
+                    />
+                {/await}
+            {/if}
+            {#if $fitResults}
+                {#await fetchFitData($fitResults.args, start, stop, num) then fitdata}
                     <Dataline
                         data={fitdata}
                         noMarker

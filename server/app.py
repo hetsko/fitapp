@@ -12,11 +12,6 @@ from flask import Flask, jsonify, request, redirect
 import numpy
 from scipy.optimize import curve_fit
 
-try:
-    import xarray
-except ImportError:
-    xarray = None
-
 
 _logger = logging.getLogger(__name__)
 
@@ -107,7 +102,7 @@ class FitApp:
         def ids():
             return jsonify(ids=self.labels)
 
-        @app.route('/data/meta', methods=['POST'])
+        @app.route('/data.meta', methods=['POST'])
         @json_required(['id'])
         def metadata(json):
             if json['id'] not in self.labels:
@@ -116,7 +111,7 @@ class FitApp:
             try:
                 metadata = self._get_metadata(json['id'])
             except Exception as e:
-                _logger.error(f'/data/meta: {type(e).__name__}: {str(e)}')
+                _logger.error(f'/data.meta: {type(e).__name__}: {str(e)}')
                 return jsonify(ok=False, error='exception',
                                exception=f'{type(e).__name__}: {str(e)}'), 500
 
@@ -127,7 +122,7 @@ class FitApp:
             else:
                 return jsonify(ok=True, metadata=metadata), 200
 
-        @app.route('/data', methods=['POST'])
+        @app.route('/data.data', methods=['POST'])
         @json_required(['id'])
         def data(json):
             if json['id'] not in self.labels:
@@ -136,7 +131,7 @@ class FitApp:
             try:
                 data = self._get_data(json['id'])
             except Exception as e:
-                _logger.error(f'/data: {type(e).__name__}: {str(e)}')
+                _logger.error(f'/data.data: {type(e).__name__}: {str(e)}')
                 return jsonify(ok=False, error='exception',
                                exception=f'{type(e).__name__}: {str(e)}'), 500
             if not isinstance(data, Data):
@@ -145,7 +140,7 @@ class FitApp:
                 return jsonify(ok=False, error=error), 500
             return jsonify(ok=True, data=data.todict()), 200
 
-        @app.route('/fit/meta', methods=['POST'])
+        @app.route('/fit.meta', methods=['POST'])
         @json_required(['id'])
         def fit_metadata(json):
             if json['id'] not in self.labels:
@@ -159,12 +154,12 @@ class FitApp:
                     'params': self._fitfunc_params,
                 }
             except Exception as e:
-                _logger.error(f'/fit/meta: {type(e).__name__}: {str(e)}')
+                _logger.error(f'/fit.meta: {type(e).__name__}: {str(e)}')
                 return jsonify(ok=False, error='exception',
                                exception=f'{type(e).__name__}: {str(e)}'), 500
             return jsonify(ok=True, metadata=metadata), 200
 
-        @app.route('/fit/data', methods=['POST'])
+        @app.route('/fit.data', methods=['POST'])
         @json_required(['fitArgs', 'start', 'stop', 'num'])
         def fit_data(json):
             if self._fitfunc is None:
@@ -179,12 +174,12 @@ class FitApp:
                 x = numpy.linspace(json['start'], json['stop'], json['num'])
                 data = Data(x=x, y=self._fitfunc(x, *json['fitArgs']))
             except Exception as e:
-                _logger.error(f'/fit/data: {type(e).__name__}: {str(e)}')
+                _logger.error(f'/fit.data: {type(e).__name__}: {str(e)}')
                 return jsonify(ok=False, error='exception',
                                exception=f'{type(e).__name__}: {str(e)}'), 500
             return jsonify(ok=True, data=data.todict()), 200
 
-        @app.route('/fit/calculate', methods=['POST'])
+        @app.route('/fit.calculate', methods=['POST'])
         @json_required(['id', 'fitArgs'])
         def fit_calculate(json):
             if json['id'] not in self.labels:
@@ -200,12 +195,12 @@ class FitApp:
             try:
                 data = self._get_data(json['id'])
                 results = self._fit_data(
-                    self._fitfunc, data, guess=json['fitArgs']))
+                    self._fitfunc, data, guess=json['fitArgs'])
             except Exception as e:
-                _logger.error(f'/fit/calculate: {type(e).__name__}: {str(e)}')
-                return jsonify(ok = False, error = 'exception',
-                               exception = f'{type(e).__name__}: {str(e)}'), 500
-            return jsonify(ok = True, **results), 200
+                _logger.error(f'/fit.calculate: {type(e).__name__}: {str(e)}')
+                return jsonify(ok=False, error='exception',
+                               exception=f'{type(e).__name__}: {str(e)}'), 500
+            return jsonify(ok=True, results=results), 200
 
         return app
 
@@ -219,19 +214,19 @@ class FitApp:
         self._server_thread.join()
 
     @ staticmethod
-    def _fit_data(f, data, guess = None):
+    def _fit_data(f, data, guess=None):
         if data.y is None:
             raise RuntimeError('Cannot fit data without y coordinates')
-        opt, std=curve_fit(
+        opt, std = curve_fit(
             f,
             numpy.asarray(data.x),
             numpy.asarray(data.y),
-            sigma = None if data.yerr is None else numpy.asarray(data.yerr),
-            p0 = guess
+            sigma=None if data.yerr is None else numpy.asarray(data.yerr),
+            p0=guess
         )
         return {
-            'fitArgs': opt.tolist(),
-            'fitArgsErr': numpy.sqrt(numpy.diag(std)).tolist()
+            'args': opt.tolist(),
+            'argsErr': numpy.sqrt(numpy.diag(std)).tolist()
         }
 
     @ property

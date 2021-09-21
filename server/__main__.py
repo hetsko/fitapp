@@ -4,13 +4,13 @@ import random
 logging.basicConfig(level=logging.INFO, format='%(message)s')
 
 # fit = get_fitapp()
-fit = get_fitapp(open_browser=False)
+fit = get_fitapp(open_browser=False, http_log=True)
 
 # Setup testing data
-fit.labels = ['1', '2', '3']
+fit.labels = ['1', '3', '5']
 fit.callback_data(lambda i: Data(
-    x=list(range(int(i) + 4)),
-    y=[a + -1 + 2*random.random() for a in range(int(i) + 4)]
+    x=list(range(20)),
+    y=[int(i)*x + -1 + 2*random.random() for x in range(20)]
 ))
 
 

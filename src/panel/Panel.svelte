@@ -4,6 +4,13 @@
 
     import { formatNumber } from "../graph/ticks";
     import { xLim, yLim, gridParams } from "../storeConfiguration";
+    import { fetchFitResults } from "../requests";
+    import {
+        idSelected,
+        fitMetadata,
+        fitGuess,
+        fitResults,
+    } from "../storeData";
 
     let dispatch = createEventDispatcher();
 
@@ -32,6 +39,19 @@
         <IdSelector />
         <!-- <input type="range" min="1" max="10" bind:value={graphWidth} /> -->
         <!-- <input type="number" on:submit="{(e) => graph.setXLim(value)}" /> -->
+
+        <div>
+            {#each $fitMetadata.params as param}
+                <span>{param}</span>
+            {/each}
+            <button
+                on:click={() =>
+                    fetchFitResults($idSelected, $fitGuess).then(
+                        results => ($fitResults = results)
+                    )}>Fit data</button
+            >
+        </div>
+
         <div>
             <input type="text" step="any" bind:value={setXLimMin} />
             &leq; x &leq;
@@ -105,5 +125,8 @@
         /* flex-wrap: wrap; */
         justify-content: center;
         /* max-width: 16rem; */
+    }
+    span {
+        margin: 0.5em;
     }
 </style>

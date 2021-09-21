@@ -48,7 +48,7 @@ export async function fetchIds() {
 }
 
 export async function fetchMetadata(id) {
-    const response = await fetch("/data/meta", {
+    const response = await fetch("/data.meta", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ id }),
@@ -60,7 +60,7 @@ export async function fetchMetadata(id) {
 }
 
 export async function fetchData(id) {
-    const response = await fetch("/data", {
+    const response = await fetch("/data.data", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ id }),
@@ -82,20 +82,20 @@ export async function fetchData(id) {
 }
 
 export async function fetchFitMetadata(id) {
-    const response = await fetch("/fit/meta", {
+    const response = await fetch("/fit.meta", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ id }),
     });
     if (await checkAndHandleError(response, "fetchFitMetadata()"))
-        return "[n/a]";
+        return { args: [], params: [] };
 
     const { metadata } = await response.json();
     return metadata;
 }
 
 export async function fetchFitData(fitArgs, start, stop, num) {
-    const response = await fetch("/fit/data", {
+    const response = await fetch("/fit.data", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ fitArgs, start, stop, num }),
@@ -115,4 +115,17 @@ export async function fetchFitData(fitArgs, start, stop, num) {
         );
     }
     return sortData(data);
+}
+
+export async function fetchFitResults(id, fitArgs = null) {
+    const response = await fetch("/fit.calculate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id, fitArgs }),
+    });
+    if (await checkAndHandleError(response, "fetchFitResults()"))
+        return { args: [], argsErr: [] };
+
+    const { results } = await response.json();
+    return results;
 }

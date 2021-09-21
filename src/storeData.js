@@ -21,7 +21,7 @@ export const idSelected = writable(null);
 export const metadata = derived(
     idSelected,
     ($id, set) => {
-        fetchMetadata($id).then(a => set(a));
+        if ($id) fetchMetadata($id).then(a => set(a));
     },
     "..."
 );
@@ -44,13 +44,19 @@ export const selected = writable(new Set());
 export const fitMetadata = derived(
     idSelected,
     ($id, set) => {
-        if ($id)
-            fetchFitMetadata($id).then(data => {
-                set(data);
-                fitGuess.set(data.args);
-            });
+        if ($id) fetchFitMetadata($id).then(data => set(data));
     },
     { args: [], params: [] }
 );
 
-export const fitGuess = writable(null);
+export const fitGuess = (() => {
+    const store = writable(null);
+    fitMetadata.subscribe($metadata => store.set($metadata.args));
+    return store;
+})();
+
+export const fitResults = (() => {
+    const store = writable(null);
+    fitMetadata.subscribe(() => store.set(null));
+    return store;
+})();
