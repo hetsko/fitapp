@@ -10,7 +10,7 @@
         toPlotScaleX,
         toPlotScaleY,
     } from "./graph/storeTransforms";
-    import { dataSorted, selected } from "./storeData";
+    import { data, selected } from "./storeData";
     import { xLim, yLim } from "./storeConfiguration";
     import { formatNumber } from "./graph/ticks";
 
@@ -32,7 +32,7 @@
             $yLim = [-10, 10];
         }
     }
-    $: setDefaultLims($dataSorted);
+    $: setDefaultLims($data);
 
     function pointsInRect(dataX, dataY, bboxClient) {
         const bbox = {
@@ -165,11 +165,7 @@
                 ];
                 break;
             case "rectSelect":
-                $selected = pointsInRect(
-                    $dataSorted.x,
-                    $dataSorted.y,
-                    mouseActionRect
-                );
+                $selected = pointsInRect($data.x, $data.y, mouseActionRect);
                 break;
         }
         mouseAction = "none";
@@ -219,7 +215,7 @@
             rect={mouseActionRect}
         />
     {/if}
-    <Panel on:resetlims={setDefaultLims($dataSorted)} />
+    <Panel on:resetlims={setDefaultLims($data)} />
     <div class="mouse-position">
         [{formatNumber(mousePlotCoords.x)},
         {formatNumber(mousePlotCoords.y)}]

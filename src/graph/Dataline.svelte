@@ -2,7 +2,10 @@
     import { clientHeight, toClientX, toClientY } from "./storeTransforms";
 
     export let data;
-    export let selected;
+    export let selected = null;
+
+    export let noMarker = false;
+    export let noLine = false;
 
     export let params = {};
     params = {
@@ -15,23 +18,33 @@
         ...params,
     };
 
-    $: lineString = data.hasOwnProperty("y")
-        ? data.x.reduce(
-              (path, x, i) =>
-                  path + ` ${$toClientX(x)},${$toClientY(data.y[i])}`,
-              `M ${$toClientX(data.x[0])},${$toClientY(data.y[0])} L`
-          )
-        : data.x.reduce(
-              (path, x) => path + `M ${$toClientX(x)},0 v -${$clientHeight}`,
-              ""
-          );
+    $: lineString =
+        noLine || data.x.length === 0
+            ? ""
+            : data.hasOwnProperty("y")
+            ? data.x.reduce(
+                  (path, x, i) =>
+                      path + ` ${$toClientX(x)},${$toClientY(data.y[i])}`,
+                  `M ${$toClientX(data.x[0])},${$toClientY(data.y[0])} L`
+              )
+            : data.x.reduce(
+                  (path, x) =>
+                      path + `M ${$toClientX(x)},0 v -${$clientHeight}`,
+                  ""
+              );
 </script>
 
 <g>
-    <g fill="none" stroke={params.lc ?? params.color} stroke-width={params.lw}>
-        <path d={lineString} />
-    </g>
-    {#if data.hasOwnProperty("y")}
+    {#if !noLine}
+        <g
+            fill="none"
+            stroke={params.lc ?? params.color}
+            stroke-width={params.lw}
+        >
+            <path d={lineString} />
+        </g>
+    {/if}
+    {#if !noMarker && data.hasOwnProperty("y")}
         <g
             fill={params.mfc ?? params.color}
             stroke={params.mec ?? params.color}
@@ -41,7 +54,7 @@
                     cx={$toClientX(x)}
                     cy={$toClientY(data.y[i])}
                     r={params.markersize}
-                    {...selected.has(i) ? { fill: "black" } : {}}
+                    {...selected && selected.has(i) ? { fill: "black" } : {}}
                 />
             {/each}
         </g>

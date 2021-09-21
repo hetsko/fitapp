@@ -143,10 +143,10 @@ class FitApp:
             return jsonify(ok=True, data=data.todict()), 200
 
         @app.route('/fitdata', methods=['POST'])
-        @json_required(['id', 'fitArgs', 'start', 'stop', 'num'])
+        @json_required(['fitArgs', 'start', 'stop', 'num'])
         def fitdata(json):
-            if json['id'] not in self.labels:
-                return jsonify(ok=False, error=f'Id \'{json["id"]}\' not found'), 404
+            if self._fitfunc is None:
+                return jsonify(ok=True, data=Data(x=[], y=[]).todict()), 200
 
             try:
                 x = numpy.linspace(json['start'], json['stop'], json['num'])
@@ -163,9 +163,12 @@ class FitApp:
             if json['id'] not in self.labels:
                 return jsonify(ok=False, error=f'Id \'{json["id"]}\' not found'), 404
 
+            if self._fitfunc is None:
+                return jsonify(ok=False, error='No fit model was not specified'), 404
+
             try:
                 data = self._get_data(json['id'])
-                results = self._fit_data(data)
+                results = self._fit_data(self._fitfunc, data)
             except Exception as e:
                 _logger.error(f'/calculate/fit: {type(e).__name__}: {str(e)}')
                 return jsonify(ok=False, error='exception',
@@ -183,11 +186,12 @@ class FitApp:
         self._server.shutdown()
         self._server_thread.join()
 
-    def _fit_data(self, data, guess=None):
+    @ staticmethod
+    def _fit_data(f, data, guess=None):
         if data.y is None:
             raise RuntimeError('Cannot fit data without y coordinates')
         opt, std = curve_fit(
-            self._fitfunc,
+            f,
             numpy.asarray(data.x),
             numpy.asarray(data.y),
             sigma=None if data.yerr is None else numpy.asarray(data.yerr),
@@ -198,7 +202,7 @@ class FitApp:
             'fitArgsErr': numpy.sqrt(numpy.diag(std)).tolist()
         }
 
-    @property
+    @ property
     def address(self):
         return 'http://{}:{}/'.format(*self._server.server_address)
 
@@ -206,7 +210,7 @@ class FitApp:
         """Opens the app in your default browser."""
         webbrowser.open_new_tab(self.address)
 
-    @property
+    @ property
     def labels(self):
         """Unique labels for your datasets: list[str]. The labels are displayed
         in the webapp and used to select the active dataset, whose label is
@@ -214,7 +218,7 @@ class FitApp:
         """
         return self._labels
 
-    @labels.setter
+    @ labels.setter
     def labels(self, labels):
         self._labels = list(labels)
 
@@ -250,7 +254,7 @@ class FitApp:
 
 def json_required(keys):
     def decorator(f):
-        @functools.wraps(f)
+        @ functools.wraps(f)
         def wrapped(*args, **kwargs):
             json = request.get_json()
             if not json:

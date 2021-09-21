@@ -1,8 +1,13 @@
 <script>
     import Grid from "./Grid.svelte";
     import Dataline from "./Dataline.svelte";
-    import { dataSorted, selected } from "../storeData";
+    import { data, selected, fitGuess } from "../storeData";
     import { clientWidth, clientHeight } from "./storeTransforms";
+    import { fetchFitdata } from "../requests";
+
+    const num = 500;
+    $: start = $data.x.at($selected.size ? Math.min(...$selected) : 0);
+    $: stop = $data.x.at($selected.size ? Math.max(...$selected) : -1);
 </script>
 
 <div class="root" on:mousedown on:mousewheel>
@@ -11,7 +16,12 @@
         viewBox="0 {-$clientHeight} {$clientWidth} {$clientHeight}"
     >
         <Grid />
-        <Dataline data={$dataSorted} selected={$selected} />
+        {#if $data.x.length > 0}
+            <Dataline data={$data} selected={$selected} />
+            {#await fetchFitdata($fitGuess, start, stop, num) then fitdata}
+                <Dataline data={fitdata} noMarker params={{ color: "green" }} />
+            {/await}
+        {/if}
     </svg>
 </div>
 
