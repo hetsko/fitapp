@@ -2,7 +2,7 @@
     import { ids, idSelected } from "../storeData";
 </script>
 
-<div class="root">
+<div>
     {#each $ids as id}
         <button
             disabled={id === $idSelected}

@@ -31,6 +31,9 @@
             $xLim = [-10, 10];
             $yLim = [-10, 10];
         }
+
+        // $xLim = [19.81, 20.05];
+        // $yLim = [-10, 10];
     }
     $: setDefaultLims($data);
 
@@ -106,8 +109,8 @@
                 mouseAction = "rectZoom";
             } else if (e.shiftKey) {
                 mouseActionRect = {
-                    x: e.clientX - 2, // 2px shift so that the crosshair cursor
-                    y: e.clientY - 2, // is aligned with the rect's border
+                    x: e.clientX,
+                    y: e.clientY,
                     width: 0,
                     height: 0,
                 };
@@ -136,8 +139,10 @@
             case "rectSelect":
                 mouseActionRect = {
                     ...mouseActionRect,
-                    width: mouseActionRect.width + e.movementX,
-                    height: mouseActionRect.height + e.movementY,
+                    // 2px shift so that the crosshair cursor
+                    // is aligned with the rect's border
+                    width: e.clientX - mouseActionRect.x - 2,
+                    height: e.clientY - mouseActionRect.y - 2,
                 };
                 break;
             case "none":
@@ -226,10 +231,11 @@
     .root {
         height: 100%;
         position: relative;
+        overflow: hidden;
     }
     .mouse-position {
         position: absolute;
-        bottom: 1rem;
+        bottom: 0.5rem;
         right: 2rem;
         text-align: right;
     }

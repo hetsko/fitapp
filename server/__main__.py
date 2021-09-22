@@ -7,10 +7,10 @@ logging.basicConfig(level=logging.INFO, format='%(message)s')
 fit = get_fitapp(open_browser=False, http_log=True)
 
 # Setup testing data
-fit.labels = ['1', '3', '5']
+fit.labels = [f'{21000+i}/{i}' for i in range(1, 15)]
 fit.callback_data(lambda i: Data(
     x=list(range(20)),
-    y=[int(i)*x + -1 + 2*random.random() for x in range(20)]
+    y=[int(i.split('/')[-1])*x + -1 + 2*random.random() for x in range(20)]
 ))
 
 

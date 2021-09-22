@@ -27,17 +27,17 @@
 </script>
 
 <div>
-    <input type="text" step="any" bind:value={setXLimMin} />
+    <input type="text" step="any" bind:value={setXLimMin} aria-label="x min" />
     &leq; x &leq;
-    <input type="text" step="any" bind:value={setXLimMax} />
+    <input type="text" step="any" bind:value={setXLimMax} aria-label="x max" />
     <button on:click={() => xLim.set([Number(setXLimMin), Number(setXLimMax)])}>
         Set
     </button>
     <br />
 
-    <input type="text" step="any" bind:value={setYLimMin} />
+    <input type="text" step="any" bind:value={setYLimMin} aria-label="y min" />
     &leq; y &leq;
-    <input type="text" step="any" bind:value={setYLimMax} />
+    <input type="text" step="any" bind:value={setYLimMax} aria-label="y max" />
     <button on:click={() => yLim.set([Number(setYLimMin), Number(setYLimMax)])}>
         Set
     </button>
