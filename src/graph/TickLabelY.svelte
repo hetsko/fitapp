@@ -10,6 +10,21 @@
     $: xRaw = $toClientX(0);
     $: x = Math.min(Math.max(xRaw, 0), $clientWidth);
     $: flipped = x < 0.1 * $clientWidth;
+
+    let text;
+    $: if (Math.abs(base) >= zeroThr && x !== xRaw) {
+        text = `${baseFormatted ?? base}`;
+        if (Math.abs(y - base) >= zeroThr) {
+            text +=
+                y - base >= 0
+                    ? ` + ${formatNumber(y - base)}`
+                    : ` + (${formatNumber(y - base)})`;
+        }
+    } else if (Math.abs(y - base) >= zeroThr) {
+        text = formatNumber(y - base);
+    } else {
+        text = "0.00";
+    }
 </script>
 
 <text
@@ -17,17 +32,9 @@
     y={$toClientY(y) + 4}
     text-anchor={flipped ? "start" : "end"}
     dominant-baseline="hanging"
+    transform={`rotate(${x !== xRaw ? 30 : 0}, ${
+        x + (flipped ? +8 : -8)
+    }, ${$toClientY(y)})`}
 >
-    {#if Math.abs(base) >= zeroThr && x !== xRaw}
-        {baseFormatted ?? base}
-        {y - base >= 0 ? " + " : " + ("}
-        {#if Math.abs(y - base) >= zeroThr}
-            {formatNumber(y - base)}
-        {/if}
-        {y - base >= 0 ? "" : ")"}
-    {:else if Math.abs(y - base) >= zeroThr}
-        {formatNumber(y - base)}
-    {:else}
-        0.00
-    {/if}
+    {text}
 </text>

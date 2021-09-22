@@ -1,4 +1,5 @@
 <script>
+    import { draw, fade } from "svelte/transition";
     import { clientHeight, toClientX, toClientY } from "./storeTransforms";
 
     export let data;
@@ -41,7 +42,7 @@
             stroke={params.lc ?? params.color}
             stroke-width={params.lw}
         >
-            <path d={lineString} />
+            <path d={lineString} in:draw={{ duration: 500 }} />
         </g>
     {/if}
     {#if !noMarker && data.hasOwnProperty("y")}

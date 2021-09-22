@@ -18,12 +18,12 @@ _logger = logging.getLogger(__name__)
 fitapps_ports = {}
 
 
-def get_fitapp(port=5050, open_browser=True, http_log=False, cache=16):
+def get_fitapp(port=5050, open_browser=True, http_log=False, data_cache=16):
     """Create a new FitApp listening at given port. Any subsequent calls to this
     function with the same `port` parameter return the original app instance.
     """
     if port not in fitapps_ports:
-        fitapps_ports[port] = FitApp(port, open_browser, http_log, cache)
+        fitapps_ports[port] = FitApp(port, open_browser, http_log, data_cache)
     else:
         _logger.info(
             f'Access an existing app on {fitapps_ports[port].address}')
@@ -56,7 +56,7 @@ class Data:
 
 
 class FitApp:
-    def __init__(self, port=5050, open_browser=True, http_log=False, cache=16):
+    def __init__(self, port=5050, open_browser=True, http_log=False, data_cache=16):
         self._labels = []
         self._fitfunc = None
         self._fitfunc_params = []
@@ -64,7 +64,7 @@ class FitApp:
         self._get_data = lambda _: Data(x=[])
         self._get_guess = lambda _: len(self._fitfunc_params) * [1]
 
-        self._lru_cache = cache
+        self._lru_cache = data_cache
 
         self._flask_app = self._init_flask()
         try:
@@ -231,6 +231,7 @@ class FitApp:
 
     @ property
     def address(self):
+        """Address of the web interface."""
         return 'http://{}:{}/'.format(*self._server.server_address)
 
     def open_browser(self):

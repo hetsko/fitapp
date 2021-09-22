@@ -10,6 +10,21 @@
     $: yRaw = $toClientY(0);
     $: y = Math.max(Math.min(yRaw, 0), -$clientHeight);
     $: flipped = y > 0.1 * -$clientHeight;
+
+    let text;
+    $: if (Math.abs(base) >= zeroThr && y !== yRaw) {
+        text = `${baseFormatted ?? base}`;
+        if (Math.abs(x - base) >= zeroThr) {
+            text +=
+                x - base >= 0
+                    ? ` + ${formatNumber(x - base)}`
+                    : ` + (${formatNumber(x - base)})`;
+        }
+    } else if (Math.abs(x - base) >= zeroThr) {
+        text = formatNumber(x - base);
+    } else {
+        text = "0.00";
+    }
 </script>
 
 <text
@@ -18,12 +33,5 @@
     text-anchor="start"
     dominant-baseline={flipped ? "bottom" : "hanging"}
 >
-    {#if Math.abs(base) >= zeroThr && y !== yRaw}
-        {baseFormatted ?? base} +
-    {/if}
-    {#if Math.abs(x - base) >= zeroThr}
-        {formatNumber(x - base)}
-    {:else}
-        0.00
-    {/if}
+    {text}
 </text>
