@@ -43,7 +43,7 @@ fit.labels = ['data1', 'data2']
 def get_data(label):
     if label == 'data1':
         return Data(x=[1, 2, 3], y=[4, 10, -3])
-    else if == 'data1':
+    elif label == 'data1':
         return Data(x=[1, 2, 3], y=[-1, -2, -3])
 
 # 4. Register a fit callback function that is used to fit the data. It is
