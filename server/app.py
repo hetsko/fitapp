@@ -149,8 +149,9 @@ class FitApp:
                 return jsonify(ok=False, error='No fit model was not specified'), 400
 
             try:
+                guess = numpy.asarray(self._get_guess(json['id']))
                 metadata = {
-                    'args': self._get_guess(json['id']),
+                    'args': guess.tolist(),
                     'params': self._fitfunc_params,
                 }
             except Exception as e:
@@ -279,6 +280,13 @@ class FitApp:
             self._get_data = get_data
         else:
             self._get_data = functools.lru_cache(self._lru_cache)(get_data)
+
+    def callback_guess(self, get_guess):
+        """Set callback for initial values of the fit parameters with signature:
+
+        def get_guess(label: str) -> array_like
+        """
+        self._get_guess = get_guess
 
 
 def json_required(keys):
