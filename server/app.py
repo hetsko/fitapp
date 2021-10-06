@@ -205,7 +205,6 @@ class FitApp:
 
             try:
                 data = self._get_data(json['id'])
-                _logger.info(json['selected'])
                 if json['selected']:
                     data = data.select(json['selected'])
                 results = self._fit_data(

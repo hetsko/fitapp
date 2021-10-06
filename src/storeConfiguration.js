@@ -8,3 +8,5 @@ export const gridParams = writable({
     major: true,
     axes: true,
 });
+
+export const fitEnabled = writable(false);

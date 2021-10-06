@@ -4,7 +4,9 @@ import {
     fetchMetadata,
     fetchData,
     fetchFitMetadata,
+    fetchFitResults,
 } from "./requests";
+import { fitEnabled } from "./storeConfiguration";
 
 export const ids = readable([], set => {
     fetchIds().then(a => {
@@ -55,8 +57,21 @@ export const fitGuess = (() => {
     return store;
 })();
 
-export const fitResults = (() => {
-    const store = writable(null);
-    fitMetadata.subscribe(() => store.set(null));
-    return store;
-})();
+// export const fitResults = (() => {
+//     const store = writable(null);
+//     fitMetadata.subscribe(() => store.set(null));
+//     return store;
+// })();
+
+export const fitResults = derived(
+    [idSelected, fitGuess, selected, fitEnabled],
+    ([$idSelected, $fitGuess, $selected, $fitEnabled], set) => {
+        if ($idSelected && $fitGuess && $fitEnabled) {
+            fetchFitResults($idSelected, $fitGuess, [...$selected]).then(
+                results => set(results)
+            );
+        } else {
+            set(null);
+        }
+    }
+);

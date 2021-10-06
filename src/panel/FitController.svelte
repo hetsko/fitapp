@@ -1,13 +1,7 @@
 <script>
-    import { fetchFitResults } from "../requests";
     import { formatNumber } from "../graph/ticks";
-    import {
-        idSelected,
-        fitMetadata,
-        fitGuess,
-        fitResults,
-        selected,
-    } from "../storeData";
+    import { fitMetadata, fitGuess } from "../storeData";
+    import { fitEnabled } from "../storeConfiguration";
 
     $: min = $fitMetadata.args.map(a => (a !== 0 ? 0.5 * a : -10));
     $: max = $fitMetadata.args.map(a => (a !== 0 ? 1.5 * a : +10));
@@ -37,21 +31,52 @@
             />
         </div>
     {/each}
-    <button
-        on:click={() =>
-            fetchFitResults($idSelected, $fitGuess, [...$selected]).then(
-                results => ($fitResults = results)
-            )}>Fit data</button
-    >
+    Fit data
+    <input
+        class="toggle"
+        type="checkbox"
+        min="0"
+        max="1"
+        on:change={e => ($fitEnabled = e.target.checked)}
+    />
 </div>
 
 <style>
+    label {
+        margin-right: 0.4em;
+    }
     .container {
         display: flex;
         align-items: center;
         justify-content: center;
     }
-    label {
-        margin-right: 0.4em;
+    input.toggle {
+        appearance: none;
+        position: relative;
+        width: 2rem;
+        height: 1rem;
+        padding: 0;
+        margin: auto;
+    }
+    input.toggle:hover {
+        background-color: #ccc;
+    }
+    input.toggle::before {
+        content: "";
+        display: block;
+        position: absolute;
+        top: 0;
+        bottom: 0;
+        left: 0;
+        right: 50%;
+        background-color: #777;
+        border-radius: 2px;
+        transition: left 0.2s, right 0.2s;
+    }
+    input.toggle:checked::before {
+        background-color: lightcoral;
+        left: 50%;
+        right: 0;
+        transition: left 0.2s, right 0.2s;
     }
 </style>
