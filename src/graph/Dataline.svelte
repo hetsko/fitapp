@@ -1,6 +1,11 @@
 <script>
     import { draw, fade } from "svelte/transition";
-    import { clientHeight, toClientX, toClientY } from "./storeTransforms";
+    import {
+        clientHeight,
+        clientWidth,
+        toClientX,
+        toClientY,
+    } from "./storeTransforms";
 
     export let data;
     export let selected = null;
@@ -20,20 +25,30 @@
         ...params,
     };
 
+    function isInViewX(x) {
+        return -1000 <= x && x <= $clientWidth + 1000;
+    }
+    function isInViewY(y) {
+        return -1000 - $clientHeight <= y && y <= 1000;
+    }
+
     $: lineString =
         noLine || data.x.length === 0
             ? ""
             : data.hasOwnProperty("y")
-            ? data.x.reduce(
-                  (path, x, i) =>
-                      path + ` ${$toClientX(x)},${$toClientY(data.y[i])}`,
-                  `M ${$toClientX(data.x[0])},${$toClientY(data.y[0])} L`
-              )
+            ? data.x.reduce((path, x, i) => {
+                  const cx = $toClientX(x);
+                  const cy = $toClientY(data.y[i]);
+                  return isInViewX(cx) && isInViewY(cy)
+                      ? path + ` ${cx},${cy}`
+                      : path;
+              }, `M ${$toClientX(data.x[0])},${$toClientY(data.y[0])} L`)
             : data.x.reduce(
                   (path, x) =>
                       path + `M ${$toClientX(x)},0 v -${$clientHeight}`,
                   ""
               );
+    $: lineString = lineString.at(-1) === "L" ? "" : lineString;
 </script>
 
 <g>
@@ -60,12 +75,14 @@
             stroke={params.mec ?? params.color}
         >
             {#each data.x as x, i}
-                <line
-                    x1={$toClientX(x)}
-                    x2={$toClientX(x)}
-                    y1={$toClientY(data.y[i] - data.yerr[i])}
-                    y2={$toClientY(data.y[i] + data.yerr[i])}
-                />
+                {#if isInViewX($toClientX(x)) && isInViewY($toClientY(data.y[i]))}
+                    <line
+                        x1={$toClientX(x)}
+                        x2={$toClientX(x)}
+                        y1={$toClientY(data.y[i] - data.yerr[i])}
+                        y2={$toClientY(data.y[i] + data.yerr[i])}
+                    />
+                {/if}
             {/each}
         </g>
     {/if}
@@ -75,12 +92,16 @@
             stroke={params.mec ?? params.color}
         >
             {#each data.x as x, i}
-                <circle
-                    cx={$toClientX(x)}
-                    cy={$toClientY(data.y[i])}
-                    r={params.markersize}
-                    {...selected && selected.has(i) ? { fill: "black" } : {}}
-                />
+                {#if isInViewX($toClientX(x)) && isInViewY($toClientY(data.y[i]))}
+                    <circle
+                        cx={$toClientX(x)}
+                        cy={$toClientY(data.y[i])}
+                        r={params.markersize}
+                        {...selected && selected.has(i)
+                            ? { fill: "black" }
+                            : {}}
+                    />
+                {/if}
             {/each}
         </g>
     {/if}
