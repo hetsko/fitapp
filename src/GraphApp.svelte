@@ -98,7 +98,13 @@
     function handleMouseDown(e) {
         if (e.button === 0) {
             if (e.ctrlKey && e.shiftKey) {
-                mouseAction = "???";
+                mouseActionRect = {
+                    x: e.clientX,
+                    y: e.clientY,
+                    width: 0,
+                    height: 0,
+                };
+                mouseAction = "rectUnselect";
             } else if (e.ctrlKey) {
                 mouseActionRect = {
                     x: e.clientX,
@@ -137,6 +143,7 @@
                 break;
             case "rectZoom":
             case "rectSelect":
+            case "rectUnselect":
                 mouseActionRect = {
                     ...mouseActionRect,
                     // 2px shift so that the crosshair cursor
@@ -170,7 +177,17 @@
                 ];
                 break;
             case "rectSelect":
-                $selected = pointsInRect($data.x, $data.y, mouseActionRect);
+                $selected = new Set([
+                    ...$selected,
+                    ...pointsInRect($data.x, $data.y, mouseActionRect),
+                ]);
+                break;
+            case "rectUnselect":
+                const points = new Set([...$selected]);
+                for (let p of pointsInRect($data.x, $data.y, mouseActionRect)) {
+                    points.delete(p);
+                }
+                $selected = points;
                 break;
         }
         mouseAction = "none";
@@ -216,7 +233,11 @@
     <Graph on:mousedown={handleMouseDown} on:mousewheel={handleWheel} />
     {#if mouseAction.startsWith("rect")}
         <SelectionRect
-            variant={mouseAction === "rectZoom" ? 0 : 1}
+            variant={mouseAction === "rectZoom"
+                ? 0
+                : mouseAction === "rectSelect"
+                ? 1
+                : 2}
             rect={mouseActionRect}
         />
     {/if}

@@ -26,4 +26,8 @@
         border: 2px solid #c0c0c0;
         background-color: #c0c0c070;
     }
+    .variant2 {
+        border: 2px solid #f0a0a0;
+        background-color: #f0a0a070;
+    }
 </style>
