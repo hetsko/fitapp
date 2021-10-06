@@ -54,6 +54,16 @@ class Data:
             if val is not None
         }
 
+    def select(self, indices):
+        """Return a new instance of Data with selected a subset of data.
+        Analogous to numpy.ndarray: a[[1, 2, 4]]
+        """
+        return Data(
+            x=self.x[indices],
+            y=self.y[indices] if self.y is not None else self.y,
+            yerr=self.yerr[indices] if self.yerr is not None else self.yerr,
+        )
+
 
 class FitApp:
     def __init__(self, port=5050, open_browser=True, http_log=False, data_cache=16):
@@ -181,7 +191,7 @@ class FitApp:
             return jsonify(ok=True, data=data.todict()), 200
 
         @app.route('/fit.calculate', methods=['POST'])
-        @json_required(['id', 'fitArgs'])
+        @json_required(['id', 'fitArgs', 'selected'])
         def fit_calculate(json):
             if json['id'] not in self.labels:
                 return jsonify(ok=False, error=f'Id \'{json["id"]}\' not found'), 404
@@ -195,12 +205,18 @@ class FitApp:
 
             try:
                 data = self._get_data(json['id'])
+                _logger.info(json['selected'])
+                if json['selected']:
+                    data = data.select(json['selected'])
                 results = self._fit_data(
                     self._fitfunc, data, guess=json['fitArgs'])
             except Exception as e:
                 _logger.error(f'/fit.calculate: {type(e).__name__}: {str(e)}')
                 return jsonify(ok=False, error='exception',
                                exception=f'{type(e).__name__}: {str(e)}'), 500
+            for key in results:
+                if not numpy.isfinite(results[key]).all():
+                    results[key] = None
             return jsonify(ok=True, results=results), 200
 
         return app

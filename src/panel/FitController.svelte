@@ -6,6 +6,7 @@
         fitMetadata,
         fitGuess,
         fitResults,
+        selected,
     } from "../storeData";
 
     $: min = $fitMetadata.args.map(a => (a !== 0 ? 0.5 * a : -10));
@@ -38,7 +39,7 @@
     {/each}
     <button
         on:click={() =>
-            fetchFitResults($idSelected, $fitGuess).then(
+            fetchFitResults($idSelected, $fitGuess, [...$selected]).then(
                 results => ($fitResults = results)
             )}>Fit data</button
     >

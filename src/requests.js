@@ -117,11 +117,11 @@ export async function fetchFitData(fitArgs, start, stop, num) {
     return sortData(data);
 }
 
-export async function fetchFitResults(id, fitArgs = null) {
+export async function fetchFitResults(id, fitArgs = null, selected = null) {
     const response = await fetch("/fit.calculate", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ id, fitArgs }),
+        body: JSON.stringify({ id, fitArgs, selected }),
     });
     if (await checkAndHandleError(response, "fetchFitResults()"))
         return { args: [], argsErr: [] };
