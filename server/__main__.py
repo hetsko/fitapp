@@ -14,7 +14,9 @@ fit.labels = [f'{21000+i}/{i}' for i in range(1, 15)]
 def get_data(i):
     return Data(
         x=list(range(20)),
-        y=[int(i.split('/')[-1])*x + -1 + 2*random.random() for x in range(20)]
+        y=[int(i.split('/')[-1])*x + -1 + 2*random.random()
+           for x in range(20)],
+        yerr=[2 for _ in range(20)],
     )
 
 

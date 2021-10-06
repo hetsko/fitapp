@@ -23,7 +23,8 @@
                     <Dataline
                         data={fitdata}
                         noMarker
-                        params={{ color: "gray" }}
+                        noAnimation
+                        params={{ color: "gray", ls: ":" }}
                     />
                 {/await}
             {/if}

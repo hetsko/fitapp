@@ -7,6 +7,7 @@
 
     export let noMarker = false;
     export let noLine = false;
+    export let noAnimation = false;
 
     export let params = {};
     params = {
@@ -41,8 +42,31 @@
             fill="none"
             stroke={params.lc ?? params.color}
             stroke-width={params.lw}
+            stroke-dasharray={params.ls === "--"
+                ? 8
+                : params.ls === ":"
+                ? 2
+                : "none"}
         >
-            <path d={lineString} in:draw={{ duration: 500 }} />
+            <path
+                d={lineString}
+                in:draw={{ duration: !noAnimation ? 500 : 0 }}
+            />
+        </g>
+    {/if}
+    {#if !noMarker && data.hasOwnProperty("y") && data.hasOwnProperty("yerr")}
+        <g
+            fill={params.mfc ?? params.color}
+            stroke={params.mec ?? params.color}
+        >
+            {#each data.x as x, i}
+                <line
+                    x1={$toClientX(x)}
+                    x2={$toClientX(x)}
+                    y1={$toClientY(data.y[i] - data.yerr[i])}
+                    y2={$toClientY(data.y[i] + data.yerr[i])}
+                />
+            {/each}
         </g>
     {/if}
     {#if !noMarker && data.hasOwnProperty("y")}

@@ -27,7 +27,7 @@
                 {param}={formatNumber($fitGuess[i])}
             </label>
             <input
-                on:change={handleArgChange(i)}
+                on:input={handleArgChange(i)}
                 id="fit-param-{param}"
                 min={min[i]}
                 max={max[i]}
