@@ -74,6 +74,7 @@ class Data:
 class FitApp:
     def __init__(self, port=5050, open_browser=True, http_log=False, data_cache=16):
         self._labels = []
+        self._labels_str = {}
         self._fitfunc = None
         self._fitfunc_params = []
         self._get_metadata = lambda _: 'n/a'
@@ -117,16 +118,16 @@ class FitApp:
 
         @app.route('/ids')
         def ids():
-            return jsonify(ids=self.labels)
+            return jsonify(ids=list(self._labels_str))
 
         @app.route('/data.meta', methods=['POST'])
         @json_required(['id'])
         def metadata(json):
-            if json['id'] not in self.labels:
+            if json['id'] not in self._labels_str:
                 return jsonify(ok=False, error=f'Id \'{json["id"]}\' not found'), 404
 
             try:
-                metadata = self._get_metadata(json['id'])
+                metadata = self._get_metadata(self._labels_str[json['id']])
             except Exception as e:
                 _logger.error(f'/data.meta: {type(e).__name__}: {str(e)}')
                 return jsonify(ok=False, error='exception',
@@ -142,11 +143,11 @@ class FitApp:
         @app.route('/data.data', methods=['POST'])
         @json_required(['id'])
         def data(json):
-            if json['id'] not in self.labels:
+            if json['id'] not in self._labels_str:
                 return jsonify(ok=False, error=f'Id \'{json["id"]}\' not found'), 404
 
             try:
-                data = self._get_data(json['id'])
+                data = self._get_data(self._labels_str[json['id']])
             except Exception as e:
                 _logger.error(f'/data.data: {type(e).__name__}: {str(e)}')
                 return jsonify(ok=False, error='exception',
@@ -160,13 +161,14 @@ class FitApp:
         @app.route('/fit.meta', methods=['POST'])
         @json_required(['id'])
         def fit_metadata(json):
-            if json['id'] not in self.labels:
+            if json['id'] not in self._labels_str:
                 return jsonify(ok=False, error=f'Id \'{json["id"]}\' not found'), 404
             if self._fitfunc is None:
                 return jsonify(ok=False, error='No fit model was not specified'), 400
 
             try:
-                guess = numpy.asarray(self._get_guess(json['id']))
+                guess = numpy.asarray(self._get_guess(
+                    self._labels_str[json['id']]))
                 metadata = {
                     'args': guess.tolist(),
                     'params': self._fitfunc_params,
@@ -200,7 +202,7 @@ class FitApp:
         @app.route('/fit.calculate', methods=['POST'])
         @json_required(['id', 'fitArgs', 'selected'])
         def fit_calculate(json):
-            if json['id'] not in self.labels:
+            if json['id'] not in self._labels_str:
                 return jsonify(ok=False, error=f'Id \'{json["id"]}\' not found'), 404
             if self._fitfunc is None:
                 return jsonify(ok=False, error='No fit model was not specified'), 400
@@ -213,7 +215,7 @@ class FitApp:
                 json['fitArgs'] = numpy.asarray(json['fitArgs'])
 
             try:
-                data = self._get_data(json['id'])
+                data = self._get_data(self._labels_str[json['id']])
                 if json['selected']:
                     json['selected'] = numpy.asarray(json['selected'])
                 else:
@@ -229,7 +231,7 @@ class FitApp:
             self._last_fitresults = {
                 **results,
                 'params': numpy.array(self._fitfunc_params),
-                'label': json['id'],
+                'label': self._labels_str[json['id']],
                 'guess': json['fitArgs'],
                 'data': data,
                 'selected': json['selected'],
@@ -281,15 +283,20 @@ class FitApp:
 
     @property
     def labels(self):
-        """Unique labels for your datasets: list[str]. The labels are displayed
-        in the webapp and used to select the active dataset, whose label is
-        then passed to the callback fucntions as an argument.
+        """List of unique labels for your datasets. Note that the labels need
+        to stay unique when converted to text using str(), as they are
+        internally stored as text. To avoid this issue, use base types and
+        simple objects such as list or dict.
+
+        Labels are shown in the webapp (converted to text) and passed as an
+        argument to the callback functions (in the original non-text form).
         """
         return self._labels
 
     @labels.setter
     def labels(self, labels):
         self._labels = list(labels)
+        self._labels_str = {str(l): l for l in self._labels}
 
     @property
     def fit_results(self):
