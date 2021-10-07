@@ -2,6 +2,7 @@ from . import get_fitapp, Data
 
 import random
 import logging
+import numpy
 
 
 def create_test(log=True):
@@ -11,7 +12,7 @@ def create_test(log=True):
     fit = get_fitapp(open_browser=False, http_log=True)
 
     # Setup testing data
-    fit.labels = [(21000+i, i) for i in range(1, 15)]
+    fit.labels = numpy.array([(21000+i, i) for i in range(1, 15)])
 
     @fit.callback_data
     def get_data(ii):
@@ -26,7 +27,7 @@ def create_test(log=True):
         return a*x + b
 
     @fit.callback_guess
-    def get_guess(i):
+    def get_guess(ii):
         return [1, 0]
 
     return fit

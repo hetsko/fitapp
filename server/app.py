@@ -127,7 +127,7 @@ class FitApp:
                 return jsonify(ok=False, error=f'Id \'{json["id"]}\' not found'), 404
 
             try:
-                metadata = self._get_metadata(self._labels_str[json['id']])
+                metadata = self._get_metadata(json['id'])
             except Exception as e:
                 _logger.error(f'/data.meta: {type(e).__name__}: {str(e)}')
                 return jsonify(ok=False, error='exception',
@@ -147,7 +147,7 @@ class FitApp:
                 return jsonify(ok=False, error=f'Id \'{json["id"]}\' not found'), 404
 
             try:
-                data = self._get_data(self._labels_str[json['id']])
+                data = self._get_data(json['id'])
             except Exception as e:
                 _logger.error(f'/data.data: {type(e).__name__}: {str(e)}')
                 return jsonify(ok=False, error='exception',
@@ -167,8 +167,7 @@ class FitApp:
                 return jsonify(ok=False, error='No fit model was not specified'), 400
 
             try:
-                guess = numpy.asarray(self._get_guess(
-                    self._labels_str[json['id']]))
+                guess = numpy.asarray(self._get_guess(json['id']))
                 metadata = {
                     'args': guess.tolist(),
                     'params': self._fitfunc_params,
@@ -215,7 +214,7 @@ class FitApp:
                 json['fitArgs'] = numpy.asarray(json['fitArgs'])
 
             try:
-                data = self._get_data(self._labels_str[json['id']])
+                data = self._get_data(json['id'])
                 if json['selected']:
                     json['selected'] = numpy.asarray(json['selected'])
                 else:
@@ -332,26 +331,26 @@ class FitApp:
     def callback_metadata(self, get_metadata):
         """Set callback for additional information about data with signature:
 
-        def get_metadata(label: str) -> str
+        def get_metadata(label: any) -> str
         """
-        self._get_metadata = get_metadata
+        self._get_metadata = lambda l: get_metadata(self._labels_str[l])
 
     def callback_data(self, get_data):
         """Set callback for data with signature:
 
-        def get_data(label: str) -> Data
+        def get_data(label: any) -> Data
         """
-        if not self._lru_cache:
-            self._get_data = get_data
-        else:
-            self._get_data = functools.lru_cache(self._lru_cache)(get_data)
+        self._get_data = lambda l: get_data(self._labels_str[l])
+        if self._lru_cache:
+            self._get_data = functools.lru_cache(
+                self._lru_cache)(self._get_data)
 
     def callback_guess(self, get_guess):
         """Set callback for initial values of the fit parameters with signature:
 
-        def get_guess(label: str) -> array_like
+        def get_guess(label: any) -> array_like
         """
-        self._get_guess = get_guess
+        self._get_guess = lambda l: get_guess(self._labels_str[l])
 
 
 def json_required(keys):

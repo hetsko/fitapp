@@ -6,10 +6,13 @@
     {#each $ids as id}
         <button
             disabled={id === $idSelected}
+            value={id}
             on:click={e => {
-                $idSelected = e.target.innerText;
-            }}>{id}</button
+                $idSelected = e.target.value;
+            }}
         >
+            {id}
+        </button>
     {/each}
 </div>
 
