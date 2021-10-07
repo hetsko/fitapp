@@ -47,6 +47,12 @@ class Data:
         self.y = numpy.asarray(y) if y is not None else y
         self.yerr = numpy.asarray(yerr) if yerr is not None else yerr
 
+    def __repr__(self):
+        variables = (
+            v for v in ("x", "y", "yerr") if getattr(self, v) is not None
+        )
+        return f'Data({", ".join(variables)})'
+
     def todict(self):
         return {
             key: val.tolist()
@@ -75,6 +81,7 @@ class FitApp:
         self._get_guess = lambda _: len(self._fitfunc_params) * [1]
 
         self._lru_cache = data_cache
+        self._last_fitresults = None
 
         self._flask_app = self._init_flask()
         try:
@@ -202,6 +209,8 @@ class FitApp:
                     ok=False,
                     error=f'Invalid length of fitArgs ({len(json["fitArgs"])})',
                 ), 400
+            elif json['fitArgs']:
+                json['fitArgs'] = numpy.asarray(json['fitArgs'])
 
             try:
                 data = self._get_data(json['id'])
@@ -213,10 +222,21 @@ class FitApp:
                 _logger.error(f'/fit.calculate: {type(e).__name__}: {str(e)}')
                 return jsonify(ok=False, error='exception',
                                exception=f'{type(e).__name__}: {str(e)}'), 500
+
+            self._last_fitresults = {
+                **results,
+                'label': json['id'],
+                'guess': json['fitArgs'],
+                'data': data,
+            }
+
+            serializable = {
+                k: a.tolist() for k, a in results.items()
+                if numpy.isfinite(a).all()
+            }
             for key in results:
-                if not numpy.isfinite(results[key]).all():
-                    results[key] = None
-            return jsonify(ok=True, results=results), 200
+                serializable.setdefault(key, None)
+            return jsonify(ok=True, results=serializable), 200
 
         return app
 
@@ -241,11 +261,11 @@ class FitApp:
             p0=guess
         )
         return {
-            'args': opt.tolist(),
-            'argsErr': numpy.sqrt(numpy.diag(std)).tolist()
+            'args': opt,
+            'argsErr': numpy.sqrt(numpy.diag(std))
         }
 
-    @ property
+    @property
     def address(self):
         """Address of the web interface."""
         return 'http://{}:{}/'.format(*self._server.server_address)
@@ -254,7 +274,7 @@ class FitApp:
         """Opens the app in your default browser."""
         webbrowser.open_new_tab(self.address)
 
-    @ property
+    @property
     def labels(self):
         """Unique labels for your datasets: list[str]. The labels are displayed
         in the webapp and used to select the active dataset, whose label is
@@ -262,9 +282,25 @@ class FitApp:
         """
         return self._labels
 
-    @ labels.setter
+    @labels.setter
     def labels(self, labels):
         self._labels = list(labels)
+
+    @property
+    def fit_results(self):
+        """Dict with results from the most recent fit calculation. Returns None
+        when there was no calculation yet. Keys:
+
+        'label' - the label for the data
+        'data' - the fitted data as an instance of Data
+        'guess' - array of initial values of the fit parameters
+        'args' - array of optimized values of the fit parameters
+        'argsErr' - array of errors estimated from the covariance matrix
+        """
+        if self._last_fitresults:
+            return dict(self._last_fitresults)
+        else:
+            return None
 
     # def set_data(self, data):
     #     pass
