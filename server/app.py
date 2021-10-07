@@ -215,7 +215,10 @@ class FitApp:
             try:
                 data = self._get_data(json['id'])
                 if json['selected']:
-                    data = data.select(json['selected'])
+                    json['selected'] = numpy.asarray(json['selected'])
+                else:
+                    json['selected'] = numpy.arange(len(data.x))
+                data = data.select(json['selected'])
                 results = self._fit_data(
                     self._fitfunc, data, guess=json['fitArgs'])
             except Exception as e:
@@ -225,9 +228,11 @@ class FitApp:
 
             self._last_fitresults = {
                 **results,
+                'params': numpy.array(self._fitfunc_params),
                 'label': json['id'],
                 'guess': json['fitArgs'],
                 'data': data,
+                'selected': json['selected'],
             }
 
             serializable = {
@@ -292,10 +297,12 @@ class FitApp:
         when there was no calculation yet. Keys:
 
         'label' - the label for the data
-        'data' - the fitted data as an instance of Data
+        'data' - the fitted data as an instance of Data (after selection)
+        'selected' - array of indices of points that were selected
         'guess' - array of initial values of the fit parameters
         'args' - array of optimized values of the fit parameters
         'argsErr' - array of errors estimated from the covariance matrix
+        'params' - names of the fit parameters (as specified by the fit func)
         """
         if self._last_fitresults:
             return dict(self._last_fitresults)
