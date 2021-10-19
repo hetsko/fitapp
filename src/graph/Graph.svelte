@@ -24,7 +24,7 @@
                         data={fitdata}
                         noMarker
                         noAnimation
-                        params={{ color: "gray", ls: ":" }}
+                        params={{ color: "gray" }}
                     />
                 {/await}
             {/if}
