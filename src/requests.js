@@ -16,27 +16,52 @@ async function checkAndHandleError(response, label) {
 }
 
 function sortData(data) {
+    // const keys = Object.keys(data);
+    // if (keys.every(k => ["x"].includes(k))) {
+    //     return { x: [...data.x].sort((a, b) => a.x - b.x) };
+    // } else if (keys.every(k => ["x", "y"].includes(k))) {
+    //     const sorted = data.x
+    //         .map((x, i) => ({ x, y: data.y[i] }))
+    //         .sort((a, b) => a.x - b.x);
+    //     return { x: sorted.map(a => a.x), y: sorted.map(b => b.y) };
+    // } else if (keys.every(k => ["x", "y", "yerr"].includes(k))) {
+    //     const sorted = data.x
+    //         .map((x, i) => ({ x, y: data.y[i], yerr: data.yerr[i] }))
+    //         .sort((a, b) => a.x - b.x);
+    //     return {
+    //         x: sorted.map(a => a.x),
+    //         y: sorted.map(b => b.y),
+    //         yerr: sorted.map(b => b.yerr),
+    //     };
+    // } else {
+    //     console.error(`Data format {${keys}} not implemented`);
+    //     return { x: [] };
+    // }
+
     const keys = Object.keys(data);
-    if (keys.every(k => ["x"].includes(k))) {
-        return { x: [...data.x].sort((a, b) => a.x - b.x) };
-    } else if (keys.every(k => ["x", "y"].includes(k))) {
-        const sorted = data.x
-            .map((x, i) => ({ x, y: data.y[i] }))
-            .sort((a, b) => a.x - b.x);
-        return { x: sorted.map(a => a.x), y: sorted.map(b => b.y) };
-    } else if (keys.every(k => ["x", "y", "yerr"].includes(k))) {
-        const sorted = data.x
-            .map((x, i) => ({ x, y: data.y[i], yerr: data.yerr[i] }))
-            .sort((a, b) => a.x - b.x);
-        return {
-            x: sorted.map(a => a.x),
-            y: sorted.map(b => b.y),
-            yerr: sorted.map(b => b.yerr),
-        };
-    } else {
+    if (
+        ![["x"], ["x", "y"], ["x", "y", "yerr"]].some(dataFormat =>
+            keys.every(k => dataFormat.includes(k))
+        )
+    ) {
         console.error(`Data format {${keys}} not implemented`);
-        return { x: [] };
+        return { x: [], idx: [] };
     }
+
+    function to_point_object(index, data, keys) {
+        return keys.reduce(
+            (obj, key) => ({ ...obj, [key]: data[key][index] }),
+            { idx: index }
+        );
+    }
+
+    const sorted = data.x
+        .map((_x, i) => to_point_object(i, data, keys))
+        .sort((a, b) => a.x - b.x);
+    return ["idx", ...keys].reduce(
+        (obj, key) => ({ ...obj, [key]: sorted.map(a => a[key]) }),
+        {}
+    );
 }
 
 export async function fetchIds() {

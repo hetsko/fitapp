@@ -33,10 +33,14 @@ export const data = derived(
     ($id, set) => {
         if ($id) fetchData($id).then(data => set(data));
     },
-    { x: [] }
+    { x: [], idx: [] }
 );
 
 export const selected = writable(new Set());
+export const selectedOriginalOrder = derived(
+    [selected, data],
+    ([$selected, $data]) => [...$selected].map(i => $data.idx[i])
+);
 // export const selected = derived(data, $data => $data.x.map(() => false));
 
 //
@@ -64,7 +68,7 @@ export const fitGuess = (() => {
 // })();
 
 export const fitResults = derived(
-    [idSelected, fitGuess, selected, fitEnabled],
+    [idSelected, fitGuess, selectedOriginalOrder, fitEnabled],
     ([$idSelected, $fitGuess, $selected, $fitEnabled], set) => {
         if ($idSelected && $fitGuess && $fitEnabled) {
             fetchFitResults($idSelected, $fitGuess, [...$selected]).then(
