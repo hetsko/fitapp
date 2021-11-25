@@ -16,11 +16,19 @@ The frontend is written using the [Svelte](https://svelte.dev) framework and
 it communicates with python (to load data, calculate the fit, etc.) via a local
 [Flask](https://flask.palletsprojects.com/) server.
 
-## Usage
+## Install
 
-> Note: You will need a compiled build of the Svelte app, which is not included
-> in this repo. Ask the maintainer or set up a development environment
-> (see below) and use command `npm run build` to generate the build.
+Clone the repo to your machine:
+```bash
+git clone -b build https://github.com/hetsko/fitapp.git
+```
+The option `-b build` selects the build branch, which includes (hopefully)
+the latest version of the javascript build, which is required to run the app.
+
+> Alternatively, see section **Development** for instructions on how
+> to build the frontend yourself.
+
+## Usage
 
 Import as any other python package and create a new instance of the app:
 ```python
