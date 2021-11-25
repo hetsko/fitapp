@@ -56,6 +56,7 @@ def get_data(label):
 
 # 4. Register a fit callback function that is used to fit the data. It is
 #    passed directly to scipy.optimize.curve_fit().
+#    Note: It may be beneficial to also specify @fit.callback_guess (see below)
 @fit.set_fitfunc
 def func(x, A, B):
     return A*x + B
@@ -80,6 +81,18 @@ def get_guess(label):
     return [1, 0]
 ```
 
+The current fit results are contained in a dict object:
+```python
+>>> fit.fit_results
+{'args': array([-3011.91991276,   943.59548712]),
+ 'argsErr': array([361.71457033,  86.88364269]),
+ 'params': array(['A', 'B'], dtype='<U1'),
+ 'label': (20631, 11),
+ 'guess': array([1, 1]),
+ 'data': Data(x, y, yerr),
+ 'selected': array([22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35])}
+```
+
 The app starts running in a background thread the moment you run `get_fitapp()`
 and keeps running until you end the script or close the jupyter notebook.
 To create more than one app, specify different `port` for each of them (pick an
@@ -87,8 +100,13 @@ arbitrary 4-digit number). When the app is running, feel free to change
 the `get_data` callback and `fitfunc` any time by re-applying the appropriate
 decorators to the new functions and refreshing the browser window.
 
+### Mouse & keyboard control of the app
 
-
+- `MouseWheel` - zoom in, zoom out
+- `Ctrl + LeftMouse` - drag the mouse cursor to zoom in on the selected area
+- `Shift + LeftMouse` - drag the mouse cursor to select points to fit
+- `Ctrl + Shift + LeftMouse` - drag the mouse cursor to unselect points to fit
+- Toggle on the "Fit data" switch in the panel on the right to see the fitted curve
 
 ## Development
 
