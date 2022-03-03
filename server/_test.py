@@ -5,11 +5,11 @@ import logging
 import numpy
 
 
-def create_test(log=True):
+def create_test(local=True, log=True):
     if log:
         logging.basicConfig(level=logging.INFO, format='%(message)s')
 
-    fit = get_fitapp(open_browser=False, http_log=True)
+    fit = get_fitapp(open_browser=False, http_log=True, local=local)
 
     # Setup testing data
     fit.labels = numpy.array([(21000+i, i) for i in range(1, 15)])

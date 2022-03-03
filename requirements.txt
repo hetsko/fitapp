@@ -1,3 +1,6 @@
 flask==1.1.1
 numpy
 scipy
+
+# Old version of flask requires old version of itsdangerous
+itsdangerous==2.0.1

@@ -18,12 +18,12 @@ _logger = logging.getLogger(__name__)
 fitapps_ports = {}
 
 
-def get_fitapp(port=5050, open_browser=True, http_log=False, data_cache=16):
+def get_fitapp(port=5050, open_browser=True, local=True, http_log=False, data_cache=16):
     """Create a new FitApp listening at given port. Any subsequent calls to this
     function with the same `port` parameter return the original app instance.
     """
     if port not in fitapps_ports:
-        fitapps_ports[port] = FitApp(port, open_browser, http_log, data_cache)
+        fitapps_ports[port] = FitApp(port, open_browser, local, http_log, data_cache)
     else:
         _logger.info(
             f'Access an existing app on {fitapps_ports[port].address}')
@@ -72,7 +72,7 @@ class Data:
 
 
 class FitApp:
-    def __init__(self, port=5050, open_browser=True, http_log=False, data_cache=16):
+    def __init__(self, port=5050, open_browser=True, local=True, http_log=False, data_cache=16):
         self._labels = []
         self._labels_str = {}
         self._fitfunc = None
@@ -86,7 +86,9 @@ class FitApp:
 
         self._flask_app = self._init_flask()
         try:
-            self._server = make_server('127.0.0.1', port, self._flask_app)
+            self._server = make_server(
+                '127.0.0.1' if local else '0.0.0.0', port, self._flask_app,
+            )
         except OSError:
             raise RuntimeError(
                 f'Port {port} already in use, try another one or 0')
